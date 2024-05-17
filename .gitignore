@@ -1,4 +1,5 @@
 .env
 .python-version
+*cache*
 
 tmp*

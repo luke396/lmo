@@ -50,6 +50,8 @@ ignore = [
     "S311",
     # missing-trailing-comma
     "COM812",
+    # single-line-implicit-string-concatenation
+    "ISC001",
     # todo issue link
     "TD003",
     # fix todo

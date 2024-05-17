@@ -7,6 +7,10 @@ import re
 
 from dotenv import load_dotenv
 from openai import OpenAI
+from openai.types.chat import (
+    ChatCompletionSystemMessageParam,
+    ChatCompletionUserMessageParam,
+)
 
 
 class EnvironmentVariableError(Exception):
@@ -22,8 +26,8 @@ def load_env() -> dict[str, str]:
         )
         raise EnvironmentVariableError(msg)
 
-    env_vars = {var: os.getenv(var) for var in ["GLM_API", "API_URL"]}
-    missing_vars = [var for var, value in env_vars.items() if value is None]
+    env_vars = {var: os.getenv(var, "") for var in ["GLM_API", "API_URL"]}
+    missing_vars = [var for var, value in env_vars.items() if value == ""]
 
     if missing_vars:
         msg = f"Missing environment variables: {', '.join(missing_vars)}"
@@ -56,14 +60,24 @@ class TextTransformer:
 
     def _process_text(self, prompt: dict[str, str]) -> str:
         """Process text based on the action."""
+        system_message = ChatCompletionSystemMessageParam(
+            role="system", content=prompt["system"]
+        )
+        user_message = ChatCompletionUserMessageParam(
+            role="user", content=prompt["user"]
+        )
+
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": prompt.get("system")},
-                {"role": "user", "content": prompt.get("user")},
+                system_message,
+                user_message,
             ],
         )
-        return response.choices[0].message.content
+
+        response_text = response.choices[0].message.content
+
+        return response_text if response_text else "No response."
 
     def translate(self, text: str) -> str:
         """Translate Chinese to English."""

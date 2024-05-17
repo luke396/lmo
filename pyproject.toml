@@ -1,0 +1,86 @@
+[tool.ruff]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    ".log",
+]
+
+line-length = 88
+indent-width = 4
+
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+ignore = [
+    # Relax the convention by _not_ requiring documentation for every function parameter.
+    "D417",
+    # Missing type annotation for {name} in method
+    "ANN101",
+    # Missing type annotation for *{name}   
+    "ANN002",
+    # Missing type annotation for **{name}
+    "ANN003",
+    # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "S311",
+    # missing-trailing-comma
+    "COM812",
+    # todo issue link
+    "TD003",
+    # fix todo
+    "FIX002",
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    # Missing docstring in public module
+    "D100",
+    # Missing docstring in public function
+    "D103",
+]
+"*.ipynb" = [
+    # ambiguous-unicode-character-string 
+    "RUF001",
+]
+
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+ignore_missing_imports = true

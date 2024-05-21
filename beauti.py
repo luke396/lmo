@@ -75,38 +75,46 @@ class TextTransformer:
             ],
         )
 
-        response_text = response.choices[0].message.content
+        if response.choices and response.choices[0].message.content:
+            return response.choices[0].message.content
+        return "No response."
 
-        return response_text if response_text else "No response."
+    def _create_prompt(self, role: str, task: str, text: str, *, for_git: bool) -> dict:
+        """Create a prompt dictionary."""
+        if for_git:
+            system_prompt = (
+                f"You are an expert {role}, "
+                "especially have experience in writing Github user friendly sentence."
+            )
+        else:
+            system_prompt = f"You are an expert {role}"
 
-    def translate(self, text: str) -> str:
+        user_prompt = (
+            f"{task.capitalize()} the following text, "
+            "to improve clarity, conciseness, and coherence, "
+            f"making them match the expression of native speakers.\n\n{text}"
+        )
+        return {"system": system_prompt, "user": user_prompt}
+
+    def translate(self, text: str, *, for_git: bool) -> str:
         """Translate Chinese to English."""
-        return self._process_text(
-            {
-                "system": (
-                    "You are an expert translator,"
-                    "translate directly without explanation."
-                ),
-                "user": (
-                    "Translate the following Chinese text to English,"
-                    "to improve clarity, conciseness, and coherence,"
-                    f"making them match the expression of native speakers.\n\n{text}"
-                ),
-            }
+        prompt = self._create_prompt(
+            "translator",
+            "please translate directly without explanation",
+            text,
+            for_git=for_git,
         )
+        return self._process_text(prompt)
 
-    def beautify(self, text: str) -> str:
+    def beautify(self, text: str, *, for_git: bool) -> str:
         """Beautify English text."""
-        return self._process_text(
-            {
-                "system": "You are an expert writer, rewrite the text.",
-                "user": (
-                    "Beautify the following English text,"
-                    "to improve clarity, conciseness, and coherence,"
-                    f"making them match the expression of native speakers. \n\n{text}"
-                ),
-            },
+        prompt = self._create_prompt(
+            "writer",
+            "please rewrite the text directly without explanation",
+            text,
+            for_git=for_git,
         )
+        return self._process_text(prompt)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -122,15 +130,20 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "-t", "--translate", action="store_true", help="translate Chinese to English"
     )
+    parser.add_argument(
+        "-g", "--github", action="store_true", help="specify it used for Github message"
+    )
     return parser.parse_args()
 
 
-def handle_translation(trans: TextTransformer, text: str) -> None:
+def handle_translation(
+    trans: TextTransformer, text: str, *, for_git: bool = True
+) -> None:
     """Handle translation."""
     if check_language(text) == "Chinese":
-        eng = trans.translate(text)
+        eng = trans.translate(text, for_git=for_git)
         logging.info("%s", eng)
-        logging.info("%s", trans.beautify(eng))
+        logging.info("%s", trans.beautify(eng, for_git=for_git))
     else:
         logging.info(
             "Please provide Chinese text to translate."
@@ -138,11 +151,13 @@ def handle_translation(trans: TextTransformer, text: str) -> None:
         )
 
 
-def handle_beautification(trans: TextTransformer, text: str) -> None:
+def handle_beautification(
+    trans: TextTransformer, text: str, *, for_git: bool = True
+) -> None:
     """Handle beautification."""
     # TODO(luke396): Another output format for beautification
     if check_language(text) == "English":
-        logging.info("%s", trans.beautify(text))
+        logging.info("%s", trans.beautify(text, for_git=for_git))
     else:
         logging.info(
             "Please provide English text to beautify."
@@ -160,11 +175,11 @@ def main() -> None:
         return
 
     trans = TextTransformer()
-
+    for_git = args.github
     if args.translate:
-        handle_translation(trans, text)
+        handle_translation(trans, text, for_git=for_git)
     if args.beautify:
-        handle_beautification(trans, text)
+        handle_beautification(trans, text, for_git=for_git)
 
 
 if __name__ == "__main__":
